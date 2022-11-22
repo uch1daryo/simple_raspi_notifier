@@ -1,14 +1,12 @@
 class Email:
     def __init__(self):
         import os
-        import ssl
         from dotenv import load_dotenv
         from email.message import EmailMessage
-        from smtplib import SMTP_SSL
 
         load_dotenv()
-        host = os.environ["EMAIL_SMTP_HOST"]
-        port = int(os.environ["EMAIL_SMTP_PORT"])
+        self._host = os.environ["EMAIL_SMTP_HOST"]
+        self._port = int(os.environ["EMAIL_SMTP_PORT"])
         self._username = os.environ["EMAIL_SMTP_USERNAME"]
         self._password = os.environ["EMAIL_SMTP_PASSWORD"]
         email_to = os.environ["EMAIL_TO"]
@@ -16,8 +14,6 @@ class Email:
         email_subject = os.environ["EMAIL_SUBJECT"]
         email_content = os.environ["EMAIL_CONTENT"]
 
-        context = ssl.create_default_context()
-        self._server = SMTP_SSL(host, port, context=context)
         self._message = EmailMessage()
         self._message["To"] = email_to
         self._message["From"] = email_from
@@ -30,9 +26,14 @@ class Email:
             self._message["Subject"] = params["Subject"]
             self._message.set_content(params["Content"])
 
-        self._server.login(self._username, self._password)
-        self._server.send_message(self._message)
-        self._server.quit()
+        import ssl
+        from smtplib import SMTP_SSL
+
+        context = ssl.create_default_context()
+        server = SMTP_SSL(self._host, self._port, context=context)
+        server.login(self._username, self._password)
+        server.send_message(self._message)
+        server.quit()
 
 
 class Slack:
